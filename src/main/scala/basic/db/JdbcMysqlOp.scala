@@ -21,11 +21,51 @@ object JdbcMysqlOp {
     val sc = new SparkContext(conf)
     val sQLContext = new SQLContext(sc)
 
-    readAndInsertExp(sQLContext)
+//    readAndInsertExp(sQLContext)
 
     val endTime = new Date().getTime
 
     println("spend time: %d" + (endTime - startTime))
+    println("==================通过jdbc的方式插入到mysql=============================")
+    val data = sc.parallelize(List(("wwww", 10), ("iteblog", 2), ("com", 30)))
+    data.foreachPartition(sparkInsertByJDBC)
+
+  }
+
+
+  case class Blog(name: String, count: Int)
+  /**
+    * desc: 通过jdbc的方式,将spark的运算结果写入mysql等关系型数据库
+    * @param iterrator
+    *                  CREATE TABLE `blog` (
+  `name` varchar(255) NOT NULL,
+  `count` int(10) unsigned DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf-8
+    */
+  def sparkInsertByJDBC(iterrator: Iterator[(String, Int)]): Unit = {
+    import java.sql.{DriverManager, PreparedStatement, Connection}
+    var conn: Connection = null
+    var ps: PreparedStatement = null
+    val sql: String = "insert into blog (name, count) values (?, ?)"
+    try {
+      conn = DriverManager.getConnection("jdbc:mysql://xiaoqiang-zdm:3306/recommendDB", "root", "xxx")
+      iterrator.foreach{data =>
+        ps = conn.prepareStatement(sql)
+        ps.setString(1, data._1)
+        ps.setInt(2, data._2)
+        ps.executeUpdate()
+      }
+    } catch {
+      case e: Exception => println("Mysql Exception")
+    } finally {
+      if (null != ps) {
+        ps.close()
+      }
+
+      if (null != conn) {
+        conn.close()
+      }
+    }
 
   }
 

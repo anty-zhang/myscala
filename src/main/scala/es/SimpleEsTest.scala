@@ -40,9 +40,12 @@ object SimpleEsTest {
   // 基于RDD导入数据
   // 这种保存会自动生成document_id, 可通过spark/ext/_search 查询
   def write_rdd(sc: => SparkContext): Unit = {
-    val numbers = Map("one" -> 1, "two" -> 2, "three" -> 3)
-    val airports = Map("arrival" -> "Otopeni", "SFO" -> "San Fran")
-    sc.makeRDD(Seq(numbers, airports)).saveToEs("spark/ext")
+    val numbers = Map("one1" -> 1, "two1" -> 2, "three1" -> 3)
+//    val airports = Map("arrival" -> "Otopeni", "SFO" -> "San Fran")
+//    sc.makeRDD(Seq(numbers, airports)).saveToEs("spark/ext")
+    val res = sc.makeRDD(Seq(numbers))
+
+    res.saveToEs("spark/ext")
   }
 
   // 基于spark sql的dataframe导入数据
